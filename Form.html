@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    label, input, button {
+      display: block;
+      margin-bottom: 10px;
+    }
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Configurar Eventos</h1>
+  
+  <!-- Formulário de número de agentes -->
+  <form id="initialForm">
+    <label for="numAgents">Quantos agentes estarão na escala? (Máximo: 15)</label>
+    <input type="number" id="numAgents" name="numAgents" min="1" max="15" required>
+    <span id="numAgentsError" class="error"></span>
+    <button type="button" onclick="showAgentForm()">Próximo</button>
+  </form>
+  
+  <!-- Formulário para inserção dos dados dos agentes -->
+  <form id="eventForm" style="display: none;">
+    <div id="agentFields"></div>
+    
+    <label for="startDate">Data de início (DD/MM/AAAA):</label>
+    <input type="text" id="startDate" name="startDate" placeholder="08/08/2024" required>
+    <span id="startDateError" class="error"></span>
+    
+    <button type="button" onclick="submitForm()">Criar Eventos</button>
+  </form>
+  
+  <script>
+    function showAgentForm() {
+      var numAgents = parseInt(document.getElementById('numAgents').value, 10);
+      var numAgentsError = document.getElementById('numAgentsError');
+      
+      if (numAgents < 1 || numAgents > 15) {
+        numAgentsError.textContent = 'O número de agentes deve estar entre 1 e 15.';
+        return;
+      } else {
+        numAgentsError.textContent = ''; // Limpar mensagem de erro se válido
+      }
+      
+      var agentFields = document.getElementById('agentFields');
+      agentFields.innerHTML = ''; // Limpar campos existentes
+      
+      for (var i = 1; i <= numAgents; i++) {
+        agentFields.innerHTML += '<label for="agent' + i + '">Nome do Agente ' + i + ':</label>' +
+                                 '<input type="text" id="agent' + i + '" name="agent' + i + '" required>';
+      }
+      
+      // Mostrar o formulário de eventos
+      document.getElementById('initialForm').style.display = 'none';
+      document.getElementById('eventForm').style.display = 'block';
+    }
+    
+    function submitForm() {
+      var form = document.getElementById('eventForm');
+      var numAgents = document.getElementById('numAgents').value;
+      var startDateStr = form.startDate.value;
+      var startDateError = document.getElementById('startDateError');
+      
+      // Validação da data
+      if (!/^\d{2}\/\d{2}\/\d{4}$/.test(startDateStr)) {
+        startDateError.textContent = 'Formato da data deve ser DD/MM/AAAA.';
+        return;
+      } else {
+        startDateError.textContent = ''; // Limpar mensagem de erro se válido
+      }
+
+      var agentNames = [];
+      for (var i = 1; i <= numAgents; i++) {
+        var agentName = form['agent' + i].value;
+        agentNames.push(agentName);
+      }
+      
+      google.script.run.createCustomRecurringEvents(agentNames.join(','), startDateStr);
+      google.script.host.close();
+    }
+  </script>
+</body>
+</html>
